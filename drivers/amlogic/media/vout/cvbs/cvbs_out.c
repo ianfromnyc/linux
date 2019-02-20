@@ -1671,6 +1671,22 @@ static int __init vdac_config_bootargs_setup(char *line)
 
 __setup("vdaccfg=", vdac_config_bootargs_setup);
 
+static int cvbs_cable = 0;
+
+int cvbs_cable_connected(void)
+{
+	return cvbs_cable;
+}
+EXPORT_SYMBOL(cvbs_cable_connected);
+
+static int __init get_cvbs_cable(char *str)
+{
+	cvbs_cable = (str[0] == '1') ? 1 : 0;
+
+	return 0;
+}
+__setup("cvbscable=", get_cvbs_cable);
+
 arch_initcall(cvbs_init_module);
 module_exit(cvbs_exit_module);
 

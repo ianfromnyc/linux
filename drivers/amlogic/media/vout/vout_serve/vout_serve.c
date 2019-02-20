@@ -911,7 +911,9 @@ static int refresh_tvout_mode(void)
 	if (tvout_monitor_flag == 0)
 		return 0;
 
-       hpd_state = 1;
+	hpd_state = 1;
+	if (cvbs_cable_connected())
+		hpd_state = 0;
 
 	if (hpd_state) {
 		/* Vout will check the checksum of EDID of uboot and kernel.

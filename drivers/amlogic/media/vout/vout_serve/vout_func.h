@@ -92,4 +92,6 @@ extern int vout2_resume(void);
 extern int vout2_shutdown(void);
 #endif
 
+extern int cvbs_cable_connected(void);
+
 #endif
