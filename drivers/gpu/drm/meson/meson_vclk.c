@@ -505,6 +505,9 @@ static void meson_hdmi_pll_set_params(struct meson_drm *priv, unsigned int m,
 				      unsigned int frac, unsigned int od1,
 				      unsigned int od2, unsigned int od3)
 {
+	DRM_DEBUG_DRIVER("meson_hdmi_pll_set_params: m=%x frac=%x od1=%d od2=%d od3=%d\n",
+				 *m, *frac, *od1, *od2, *od3);
+	
 	unsigned int val;
 
 	if (meson_vpu_is_compatible(priv, VPU_COMPATIBLE_GXBB)) {
@@ -640,6 +643,9 @@ static unsigned int meson_hdmi_pll_get_m(struct meson_drm *priv,
 	if (meson_vpu_is_compatible(priv, VPU_COMPATIBLE_GXBB))
 		pll_freq /= 2;
 
+	DRM_DEBUG_DRIVER("meson_hdmi_get_m: m=%x\n",
+		pll_freq / XTAL_FREQ);
+	
 	return pll_freq / XTAL_FREQ;
 }
 
@@ -675,6 +681,9 @@ static unsigned int meson_hdmi_pll_get_frac(struct meson_drm *priv,
 	if (frac_m > frac)
 		return frac_max;
 	frac -= frac_m;
+	
+	DRM_DEBUG_DRIVER("meson_hdmi_get_frac: frac=%x\n",
+		min((u16)frac, (u16)(frac_max - 1)));
 
 	return min((u16)frac, (u16)(frac_max - 1));
 }
@@ -699,8 +708,10 @@ static bool meson_hdmi_pll_validate_params(struct meson_drm *priv,
 	} else if (meson_vpu_is_compatible(priv, VPU_COMPATIBLE_G12A)) {
 		/* Empiric supported min/max dividers */
 		if (m < 106 || m > 247)
+			DRM_DEBUG_DRIVER("meson_hdmi_pll_validate_params: m=%d out of range\n", m);
 			return false;
 		if (frac >= HDMI_FRAC_MAX_G12A)
+			DRM_DEBUG_DRIVER("meson_hdmi_pll_validate_params: frac=%x exceeds HDMI_FRAC_MAX_G12A=%x\n", frac, HDMI_FRAC_MAX_G12A);
 			return false;
 	}
 
@@ -713,6 +724,7 @@ static bool meson_hdmi_pll_find_params(struct meson_drm *priv,
 				       unsigned int *frac,
 				       unsigned int *od)
 {
+	DRM_DEBUG_DRIVER("meson_hdmi_pll_find_params start freq=%d m=%d frac=%x od=%d", freq, *m, *frac, *od);
 	/* Cycle from /16 to /2 */
 	for (*od = 16 ; *od > 1 ; *od >>= 1) {
 		*m = meson_hdmi_pll_get_m(priv, freq * *od);
@@ -726,7 +738,7 @@ static bool meson_hdmi_pll_find_params(struct meson_drm *priv,
 		if (meson_hdmi_pll_validate_params(priv, *m, *frac))
 			return true;
 	}
-
+	DRM_DEBUG_DRIVER("meson_hdmi_pll_find_params: no valid params found");
 	return false;
 }
 
@@ -825,6 +837,9 @@ static void meson_vclk_set(struct meson_drm *priv, unsigned int pll_base_freq,
 			   unsigned int hdmi_tx_div, unsigned int venc_div,
 			   bool hdmi_use_enci, bool vic_alternate_clock)
 {
+	DRM_DEBUG_DRIVER("meson_vclk_set: pll_base_freq = %d, od1 = %d, od2 = %d, od3 = %d, vid_pll_div = %x, vclk_div = %d, hdmi_tx_div = %d, hdmi_use_enci = %d, vic_alternate_clock = %d\n", 
+			 pll_base_freq, od1, od2, od3, vid_pll_div, vclk_div, hdmi_tx_div, hdmi_use_enci, vic_alternate_clock);	
+	
 	unsigned int m = 0, frac = 0;
 
 	/* Set HDMI-TX sys clock */
@@ -837,6 +852,7 @@ static void meson_vclk_set(struct meson_drm *priv, unsigned int pll_base_freq,
 
 	/* Set HDMI PLL rate */
 	if (!od1 && !od2 && !od3) {
+		DRM_DEBUG_DRIVER("meson_vclk_set: calling meson_hdmi_pll_generic_set for pll_base_freq = %d\n", pll_base_freq);
 		meson_hdmi_pll_generic_set(priv, pll_base_freq);
 	} else if (meson_vpu_is_compatible(priv, VPU_COMPATIBLE_GXBB)) {
 		switch (pll_base_freq) {
